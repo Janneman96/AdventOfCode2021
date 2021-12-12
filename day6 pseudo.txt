@@ -1,0 +1,83 @@
+using System;
+
+namespace ConsoleApp2
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            //input: 3, 4, 3, 1, 2
+            var fishAsAmountPerAge = new int[] { 0, 1, 1, 2, 1, 0, 0, 0, 0 };
+            var currentOldestFishGroup = GetOldestFishGroup(fishAsAmountPerAge);
+
+            Console.WriteLine($"Initial state: {GetFishGroupsAsText(currentOldestFishGroup)}");
+            for (var i = 0; i < 100000; i++) {
+                currentOldestFishGroup
+                    .older//8
+                    .older//7
+                    .amountOfFish += currentOldestFishGroup.amountOfFish;
+
+                currentOldestFishGroup = currentOldestFishGroup.younger;
+
+                Console.WriteLine($"After {i + 1:D2} days: {GetFishGroupsAsText(currentOldestFishGroup)}");
+            }
+        }
+
+        class FishGroup
+        {
+            public int timeUntilNewFish { get; set; }
+            public ulong amountOfFish { get; set; }
+            public FishGroup older { get; set; }
+            public FishGroup younger { get; set; }
+        }
+
+        static FishGroup GetOldestFishGroup(int[] fish)
+        {
+            FishGroup oldestFishGroup = new FishGroup
+            {
+                timeUntilNewFish = 0,
+                amountOfFish = (ulong) fish[0]
+            };
+
+            FishGroup lastFishGroup = oldestFishGroup;
+
+            for (int i = 1; i < 8; i++)
+            {
+                var newFishGroup = new FishGroup
+                {
+                    timeUntilNewFish = i,
+                    older = lastFishGroup,
+                    amountOfFish = (ulong) fish[i]
+                };
+                lastFishGroup.younger = newFishGroup;
+                lastFishGroup = newFishGroup;
+            }
+
+            FishGroup youngestFishGroup = new FishGroup
+            {
+                timeUntilNewFish = 8,
+                amountOfFish = (ulong) fish[8],
+                younger = oldestFishGroup,
+                older = lastFishGroup
+            };
+            lastFishGroup.younger = youngestFishGroup;
+            oldestFishGroup.older = youngestFishGroup;
+
+            return oldestFishGroup;
+        }
+
+        static string GetFishGroupsAsText(FishGroup oldestFishGroup)
+        {
+            FishGroup nextFishGroup = null;
+            var fishGroupsAsText = string.Empty;
+
+            while (!oldestFishGroup.Equals(nextFishGroup)) {
+                var fishAmount = nextFishGroup?.amountOfFish ?? oldestFishGroup.amountOfFish;
+                fishGroupsAsText += $"{fishAmount},";
+                nextFishGroup = nextFishGroup?.younger ?? oldestFishGroup.younger;
+            }
+
+            return fishGroupsAsText.TrimEnd(',');
+        }
+    }
+}
