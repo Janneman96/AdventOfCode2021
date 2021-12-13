@@ -4,12 +4,13 @@ using System.Linq;
 
 namespace Day13
 {
-    class Program
+    public class Program
     {
         static void Main()
         {
             // get initial paper
-            var inputLines = System.IO.File.ReadAllLines(@"C:\git\adventofcode2021\Day13\Day13\exampleInput.txt");
+            var inputFilePath = @"C:\git\adventofcode2021\Day13\Day13\input.txt";
+            var inputLines = System.IO.File.ReadAllLines(inputFilePath);
             var dots = inputLines
                 .TakeWhile(inputLine =>
                     !string.IsNullOrWhiteSpace(inputLine))
@@ -19,8 +20,18 @@ namespace Day13
                         X = int.Parse(inputLine.Split(',')[0]),
                         Y = int.Parse(inputLine.Split(',')[1])
                     });
-            var columns = dots.Max(coordinate => coordinate.X) + 1;
-            var rows = dots.Max(coordinate => coordinate.Y) + 1;
+
+
+            // get folds from input
+            var folds = inputLines
+                .SkipWhile(inputLine => !string.IsNullOrEmpty(inputLine))
+                .SkipWhile(inputLine => string.IsNullOrEmpty(inputLine))
+                .TakeWhile(inputLine => !string.IsNullOrEmpty(inputLine))
+                .Select(inputLine => new Fold { FoldX = inputLine.Contains('x') });
+
+            // prepare paper size
+            var columns = 1311;//largest X * 2 + 1
+            var rows = 895;//largest Y * 2 + 1
 
             var paper = new bool[rows, columns];
 
@@ -35,23 +46,51 @@ namespace Day13
             // print paper
             Print(columns, rows, paper);
 
+            // Fold paper recursively
+            Fold(columns, rows, paper, folds);
+        }
 
-            // get folds from input
-            var folds = inputLines
-                .SkipWhile(inputLine => !string.IsNullOrEmpty(inputLine))
-                .SkipWhile(inputLine => string.IsNullOrEmpty(inputLine))
-                .TakeWhile(inputLine => !string.IsNullOrEmpty(inputLine))
-                .Select(inputLine => new Fold { FoldX = inputLine.Contains('x') })
-                .Take(2)//part1
-                .ToArray();
+        private static bool[,] Fold(int currentMaxX, int currentMaxY, bool[,] paper, IEnumerable<Fold> foldsLeft)
+        {
+            var fold = foldsLeft.First();
+            var newMaxX = fold.FoldX ? currentMaxX / 2 : currentMaxX;
+            var newMaxY = fold.FoldX ? currentMaxY : currentMaxY / 2;
+            Console.WriteLine($"X{currentMaxX}, {newMaxX}; Y{currentMaxY}, {newMaxY}");
+            var newPaper = new bool[newMaxY, newMaxX];
 
-            Print(columns, rows / 2, FoldY(columns, rows, paper));
-            Print(columns / 2, rows / 2, FoldX(columns, rows / 2, FoldY(columns, rows, paper)));
+            var dotsCount = 0;
+
+            for (var y = 0; y < newMaxY; y++)
+            {
+                for (var x = 0; x < newMaxX; x++)
+                {
+                    newPaper[y, x] =
+                        paper[y, x]
+                        ||
+                        (
+                            fold.FoldX
+                                ? paper[y, currentMaxX - x - 1]
+                                : paper[currentMaxY - y - 1, x]
+                        );
+                    if (newPaper[y, x])
+                    {
+                        dotsCount++;
+                    }
+                }
+            }
+
+            Console.WriteLine($"{dotsCount} dots in:");
+            Print(newMaxX, newMaxY, newPaper);
+
+            if (foldsLeft.Count() > 1)
+            {
+                return Fold(newMaxX, newMaxY, newPaper, foldsLeft.Skip(1));
+            }
+            return newPaper;
         }
 
         private static void Print(int columns, int rows, bool[,] paper)
         {
-            Console.WriteLine("");
             for (var y = 0; y < rows; y++)
             {
                 var row = string.Empty;
@@ -61,42 +100,7 @@ namespace Day13
                 }
                 Console.WriteLine(row);
             }
-        }
-
-        private static bool[,] FoldY(int currentMaxX, int currentMaxY, bool[,] paper)
-        {
-            var newMaxX = currentMaxX;
-            var newMaxY = currentMaxY / 2;
-
-            var newPaper = new bool[newMaxY, newMaxX];
-            for (var y = 0; y < newMaxY; y++)
-            {
-                for (var x = 0; x < newMaxX; x++)
-                {
-                    newPaper[y, x] = paper[y, x] || paper[currentMaxY - y - 1, x];
-                }
-            }
-            return newPaper;
-        }
-
-        private static bool[,] FoldX(int currentMaxX, int currentMaxY, bool[,] paper)
-        {
-            var newMaxX = currentMaxX / 2;
-            var newMaxY = currentMaxY;
-
-            var newPaper = new bool[newMaxY, newMaxX];
-            for (var y = 0; y < newMaxY; y++)
-            {
-                if (y == 2)
-                {
-
-                }
-                for (var x = 0; x < newMaxX; x++)
-                {
-                    newPaper[y, x] = paper[y, x] || paper[y, currentMaxX - x - 1];
-                }
-            }
-            return newPaper;
+            Console.WriteLine("");
         }
     }
 
