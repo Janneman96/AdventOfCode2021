@@ -1,24 +1,98 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Day12
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
-            Console.WriteLine("Hello World!");
+            //var inputLines = System.IO.File.ReadAllLines($@"C:\git\adventofcode2021\Day12\Day12\input.txt");
+            var inputLines = System.IO.File.ReadAllLines($@"C:\git\adventofcode2021\Day12\Day12\input10.txt");
+            var pathing = new Pathing();
+            var paths = pathing.GetPaths(inputLines);
+            Console.WriteLine(string.Join('\n', paths));
+            Console.WriteLine($"Paths: {paths.Count()}");
         }
     }
 
     public class Pathing
     {
-        public ICollection<string> GetPaths(string filename)
-        {
-            var paths = new List<string>();
-            var inputLines = System.IO.File.ReadAllLines($@"C:\git\adventofcode2021Day10\Day10\{filename}.txt");
+        private ICollection<Cave> Caves { get; } = new List<Cave>();
 
-            return paths;
+        public IEnumerable<string> GetPaths(string[] connections)
+        {
+            AddCaves(connections);
+
+            var startCave = Caves.Single(cave => cave.Name == "start");
+            var paths = new List<List<Cave>>();
+            paths.Add(new List<Cave>() { startCave });
+
+            paths = CalculatePaths(startCave, paths);
+
+
+            return paths.Select(path => string.Join(',', path.Select(cave => cave.Name)));
         }
+
+        private static List<List<Cave>> CalculatePaths(Cave startCave, List<List<Cave>> paths)
+        {
+            var newPaths = new List<List<Cave>>();
+            foreach (var cave in startCave.ConnectedTo)
+            {
+                if (!paths.Any(path => path.Any(c => c.Name == cave.Name)))
+                {
+                    var newPath = $"{startCave.Name},{cave.Name}";
+                    //todo change from string[] to cave[][]
+                    newPaths.Add(newPath);
+                }
+            }
+
+            return newPaths;
+        }
+
+        private void AddCaves(string[] connections)
+        {
+            foreach (var connection in connections)
+            {
+                var caveNames = connection.Split('-');
+                var leftName = caveNames[0];
+                var rightName = caveNames[1];
+
+                var leftCave = GetCave(leftName);
+                var rightCave = GetCave(rightName);
+
+                leftCave.ConnectedTo.Add(rightCave);
+                if (leftCave.IsBigCave() || rightCave.IsBigCave())
+                {
+                    rightCave.ConnectedTo.Add(leftCave);
+                }
+            }
+        }
+
+        private Cave GetCave(string name)
+        {
+            var cave = Caves.SingleOrDefault(cave => cave.Name == name);
+            if (cave == null)
+            {
+                cave = new Cave(name);
+                Caves.Add(cave);
+            }
+            return cave;
+        }
+    }
+
+    public class Cave
+    {
+        public Cave(string name)
+        {
+            Name = name;
+        }
+
+        public string Name { get; }
+        public ICollection<Cave> ConnectedTo { get; } = new List<Cave>();
+
+        public bool IsBigCave() => char.IsUpper(Name[0]);
+        public bool IsSmallCave() => !IsBigCave();
     }
 }
