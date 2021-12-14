@@ -30,8 +30,8 @@ namespace Day13
                 .Select(inputLine => new Fold { FoldX = inputLine.Contains('x') });
 
             // prepare paper size
-            var columns = 1311;//largest X * 2 + 1
-            var rows = 895;//largest Y * 2 + 1
+            var columns = 1311;//largest fold X * 2 + 1
+            var rows = 895;//largest fold Y * 2 + 1
 
             var paper = new bool[rows, columns];
 
@@ -46,7 +46,7 @@ namespace Day13
             // print paper
             Print(columns, rows, paper);
 
-            // Fold paper recursively
+            // Fold and print paper recursively
             Fold(columns, rows, paper, folds);
         }
 
@@ -55,7 +55,10 @@ namespace Day13
             var fold = foldsLeft.First();
             var newMaxX = fold.FoldX ? currentMaxX / 2 : currentMaxX;
             var newMaxY = fold.FoldX ? currentMaxY : currentMaxY / 2;
+
+            // new X and new Y should always be the last fold - 1
             Console.WriteLine($"X{currentMaxX}, {newMaxX}; Y{currentMaxY}, {newMaxY}");
+
             var newPaper = new bool[newMaxY, newMaxX];
 
             var dotsCount = 0;
@@ -100,7 +103,7 @@ namespace Day13
                 }
                 Console.WriteLine(row);
             }
-            Console.WriteLine("");
+            Console.WriteLine();
         }
     }
 
