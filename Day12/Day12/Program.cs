@@ -2,6 +2,38 @@
 using System.Collections.Generic;
 using System.Linq;
 
+Pseudo from phone
+
+GetPaths(){
+  DiscoveredPaths = new List<Path>();
+
+  Bool MorePathsAvailable = true;
+
+  While (MorePathsAvailable) {
+    Var nextPath = getNextPath(discoveredpaths)
+    MorePathsAvailable = nextpath == null
+    if (MorePathsAvailable) DiscoveredPaths.add(nextpath)
+  }
+
+  Return discoveredpaths.where( last == end )
+}
+
+Getnextpath(discoveredpaths) {
+  // First time
+  Var newPath = new List<Path>()
+  En
+  Var node = startNode
+
+  While(node.availableConnections.Any()) {
+    New path.add Node.availableConnections(0);
+    node = node.availableConnections(0)
+  }
+
+  // OptimalisationIdea; trace back until another option is available; pick that option
+}
+
+
+
 namespace Day12
 {
     class Program
