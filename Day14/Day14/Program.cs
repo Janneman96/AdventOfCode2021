@@ -24,7 +24,7 @@ namespace Day14
 
 
             var temporaryPolymerTemplate = string.Empty;
-            for (var step = 1; step <= 10; step++)
+            for (var step = 1; step <= 100; step++)
             {
                 for (var i = 0; i < polymerTemplate.Length - 1; i++)
                 {
@@ -38,7 +38,10 @@ namespace Day14
                 temporaryPolymerTemplate = string.Empty;
 
                 //Console.WriteLine($"After step {step}: {polymerTemplate}");
-                Console.WriteLine($"Processed step {step}");
+                //Console.WriteLine($"After step {step}: {polymerTemplate.Length}");
+                //Console.WriteLine($"Processed step {step}");
+                var ruleUsedCount = pairInsertionRules.Count(rule => polymerTemplate.Contains(rule.From));
+                Console.WriteLine($"contains {ruleUsedCount} rules. Rules unused: {string.Join(',', pairInsertionRules.Where(rule => !polymerTemplate.Contains(rule.From)).Select(rule => rule.From))}");
             }
             var maxChar = polymerTemplate.GroupBy(character => character).Max(group => group.Count());
             var minChar = polymerTemplate.GroupBy(character => character).Min(group => group.Count());
