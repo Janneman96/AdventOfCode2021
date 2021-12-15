@@ -2,50 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 
-Pseudo from phone
-
-GetPaths(){
-  DiscoveredPaths = new List<Path>();
-
-  Bool MorePathsAvailable = true;
-
-  While (MorePathsAvailable) {
-    Var nextPath = getNextPath(discoveredpaths)
-    MorePathsAvailable = nextpath == null
-    if (MorePathsAvailable) DiscoveredPaths.add(nextpath)
-  }
-
-  Return discoveredpaths.where( last == end )
-}
-
-Getnextpath(discoveredpaths) {
-  // First time
-  Var newPath = new List<Path>()
-  En
-  Var node = startNode
-
-  While(node.availableConnections.Any()) {
-    New path.add Node.availableConnections(0);
-    node = node.availableConnections(0)
-  }
-
-  // OptimalisationIdea; trace back until another option is available; pick that option
-}
-
-
-
 namespace Day12
 {
     class Program
     {
         static void Main()
         {
-            //var inputLines = System.IO.File.ReadAllLines($@"C:\git\adventofcode2021\Day12\Day12\input.txt");
-            var inputLines = System.IO.File.ReadAllLines($@"C:\git\adventofcode2021\Day12\Day12\input10.txt");
+            var inputLines = System.IO.File.ReadAllLines($@"C:\git\adventofcode2021\Day12\Day12\input.txt");
             var pathing = new Pathing();
             var paths = pathing.GetPaths(inputLines);
             Console.WriteLine(string.Join('\n', paths));
             Console.WriteLine($"Paths: {paths.Count()}");
+            //Console.WriteLine(paths.Count(path => path.Split(',').Skip(1).Take(path.Count() - 2).Any(character => char.IsLower(character[0]))));//part 1 LOL
         }
     }
 
@@ -53,33 +21,38 @@ namespace Day12
     {
         private ICollection<Cave> Caves { get; } = new List<Cave>();
 
-        public IEnumerable<string> GetPaths(string[] connections)
+        public IEnumerable<string> GetPaths(string[] inputLines)
         {
-            AddCaves(connections);
-
+            AddCaves(inputLines);
             var startCave = Caves.Single(cave => cave.Name == "start");
-            var paths = new List<List<Cave>>();
-            paths.Add(new List<Cave>() { startCave });
-
-            paths = CalculatePaths(startCave, paths);
-
-
-            return paths.Select(path => string.Join(',', path.Select(cave => cave.Name)));
+            var paths = GetPaths(new List<Cave> { startCave });
+            var pathStrings = paths.Select(path => string.Join(',', path.Select(cave => cave.Name)));
+            return pathStrings;
         }
 
-        private static List<List<Cave>> CalculatePaths(Cave startCave, List<List<Cave>> paths)
+        private IEnumerable<List<Cave>> GetPaths(List<Cave> subPath)
         {
             var newPaths = new List<List<Cave>>();
-            foreach (var cave in startCave.ConnectedTo)
+            var currentCave = subPath.Last();
+            if (currentCave.Name == "end")
             {
-                if (!paths.Any(path => path.Any(c => c.Name == cave.Name)))
+                newPaths.Add(subPath);
+            }
+            else if (currentCave.Name == "start" && subPath.Count(cave => cave.Name == "start") > 1)
+            {
+
+            }
+            else if (
+                char.IsUpper(currentCave.Name[0])
+                || !subPath.Take(subPath.Count() - 1).Contains(currentCave)
+                || !subPath.Take(subPath.Count() - 1).GroupBy(cave => cave.Name).ToList().Any(group => char.IsLower(group.First().Name[0]) && group.Count() > 1))
+            {
+                foreach (var connectedTo in currentCave.ConnectedTo)
                 {
-                    var newPath = $"{startCave.Name},{cave.Name}";
-                    //todo change from string[] to cave[][]
-                    newPaths.Add(newPath);
+                    var newSubPath = subPath.Concat(new List<Cave> { connectedTo }).ToList();
+                    newPaths.AddRange(GetPaths(newSubPath));
                 }
             }
-
             return newPaths;
         }
 
@@ -95,10 +68,7 @@ namespace Day12
                 var rightCave = GetCave(rightName);
 
                 leftCave.ConnectedTo.Add(rightCave);
-                if (leftCave.IsBigCave() || rightCave.IsBigCave())
-                {
-                    rightCave.ConnectedTo.Add(leftCave);
-                }
+                rightCave.ConnectedTo.Add(leftCave);
             }
         }
 
