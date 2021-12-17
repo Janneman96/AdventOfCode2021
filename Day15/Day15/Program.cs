@@ -165,12 +165,7 @@ namespace Day15
 
         public int CalculateTotalRisk(IEnumerable<Position> visitedPositions, int budget, int price, int routeToX, int routeToY)
         {
-            var distance = Math.Abs(routeToX - X) + Math.Abs(routeToY - Y);
-            if (distance < 0)
-            {
-
-            }
-            if (price > budget + distance)
+            if (price > budget)
             {
                 return int.MaxValue;
             }
