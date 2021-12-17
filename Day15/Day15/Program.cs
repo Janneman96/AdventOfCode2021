@@ -8,19 +8,33 @@ namespace Day15
     {
         static void Main()
         {
-            var inputLines = System.IO.File.ReadAllLines($@"C:\git\adventofcode2021\Day15\Day15\input.txt");
-            var cavern = GetCavern(inputLines);
-
-            CalculateEachTotalRisk(cavern);
+            var cavern = GetCavern();
+            var totalRisk = GetTotalRisk(cavern);
 
             for (var i = 0; i < cavern.GetLength(0) + 1; i++) Console.Write('\n');
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write($"The total risk of the safest route is ");
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write(cavern[0, 0].TotalRisk - cavern[0, 0].RiskLevel);
+            Console.Write(totalRisk);
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write('.');
+        }
+
+        private static object GetTotalRisk(Position[,] cavern)
+        {
+            cavern[0, 0].CalculateTotalRisk();
+            return cavern[0, 0].TotalRisk - cavern[0, 0].RiskLevel;
+        }
+
+        private static Position[,] GetCavern()
+        {
+            var inputLines = System.IO.File.ReadAllLines($@"C:\git\adventofcode2021\Day15\Day15\input.txt");
+            var cavern = GetCavern(inputLines);
+
+            CalculateEachTotalRisk(cavern);
+            //var totalRisk = GetTotalRisk(cavern);
+            return cavern;
         }
 
         private static void CalculateEachTotalRisk(Position[,] cavern)
