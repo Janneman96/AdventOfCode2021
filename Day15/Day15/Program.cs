@@ -8,84 +8,101 @@ namespace Day15
     {
         static void Main()
         {
-            var inputLines = System.IO.File.ReadAllLines($@"C:\git\adventofcode2021\Day15\Day15\example.txt");
-            Cavern cavern = GetCavern(inputLines);
-            Helper.Cavern = cavern;
+            var inputLines = System.IO.File.ReadAllLines($@"C:\git\adventofcode2021\Day15\Day15\input.txt");
+            var cavern = GetCavern(inputLines);
+            Logger.Cavern = cavern;
 
-            for (var step = 0; step < 100; step++)
+            CalculateEachTotalRisk(cavern);
+
+            Console.WriteLine();
+            Console.Write($"The total risk of the safest route is ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write(cavern[0, 0].TotalRisk - cavern[0,0].RiskLevel);
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write('.');
+        }
+
+        private static void CalculateEachTotalRisk(Position[,] cavern)
+        {
+            var maxX = cavern.GetLength(1) - 1;
+            var maxY = cavern.GetLength(0) - 1;
+
+            for (var setSize = 0; setSize <= Math.Max(maxX, maxY); setSize++)
             {
-                foreach (var position in cavern.List)
+                for (var loopInSet = 0; loopInSet <= setSize; loopInSet++)
                 {
-                    position.CalculateTotalRisk();
+                    var y = maxY - loopInSet;
+                    var x = maxX + loopInSet - setSize;
+                    cavern[y, x].CalculateTotalRisk();
                 }
-                Helper.PrintCavern();
+                Logger.PrintCavern();
+            }
+            for (var setSize = Math.Max(maxX, maxY) - 1; setSize >= 0; setSize--)
+            {
+                for (var loopInSet = 0; loopInSet <= setSize; loopInSet++)
+                {
+                    var y = setSize - loopInSet;
+                    var x = loopInSet;
+                    cavern[y, x].CalculateTotalRisk();
+                }
+                Logger.PrintCavern();
             }
         }
 
-        private static Cavern GetCavern(string[] inputLines)
+        private static Position[,] GetCavern(string[] inputLines)
         {
-            var maxRowIndex = inputLines.First().Length - 1;
-            var maxColumnIndex = inputLines.Length - 1;
+            var maxX = inputLines.First().Length - 1;
+            var maxY = inputLines.Length - 1;
 
-            var cavernArray2d = new Position[maxColumnIndex + 1, maxRowIndex + 1];
+            var cavernArray2d = new Position[maxY + 1, maxX + 1];
             var cavernList = new List<Position>();
 
-            for (var rowIndex = 0; rowIndex <= maxRowIndex; rowIndex++)
+            for (var x = 0; x <= maxX; x++)
             {
-                for (var columnIndex = 0; columnIndex <= maxColumnIndex; columnIndex++)
+                for (var y = 0; y <= maxY; y++)
                 {
                     var position = new Position
                     {
-                        RiskLevel = int.Parse(inputLines[columnIndex][rowIndex].ToString()),
-                        ColumnIndex = columnIndex,
-                        RowIndex = rowIndex,
+                        RiskLevel = int.Parse(inputLines[y][x].ToString()),
+                        ColumnIndex = y,
+                        RowIndex = x,
                         TotalRisk = int.MaxValue
                     };
-                    cavernArray2d[columnIndex, rowIndex] = position;
+                    cavernArray2d[y, x] = position;
                     cavernList.Add(position);
                 }
             }
 
-            for (var rowIndex = maxRowIndex; rowIndex >= 0; rowIndex--)
+            for (var y = maxY; y >= 0; y--)
             {
-                for (var columnIndex = maxColumnIndex; columnIndex >= 0; columnIndex--)
+                for (var x = maxX; x >= 0; x--)
                 {
-                    var right = columnIndex < maxColumnIndex ? cavernArray2d[columnIndex + 1, rowIndex] : null;
-                    var left = columnIndex > 0 ? cavernArray2d[columnIndex - 1, rowIndex] : null;
-                    var bottom = rowIndex < maxRowIndex ? cavernArray2d[columnIndex, rowIndex + 1] : null;
-                    var top = rowIndex > 0 ? cavernArray2d[columnIndex, rowIndex - 1] : null;
+                    var right = x < maxX ? cavernArray2d[y, x + 1] : null;
+                    var left = x > 0 ? cavernArray2d[y, x - 1] : null;
+                    var bottom = y < maxY ? cavernArray2d[y + 1, x] : null;
+                    var top = y > 0 ? cavernArray2d[y - 1, x] : null;
 
                     if (right != null)
                     {
-                        cavernArray2d[columnIndex, rowIndex].Right = right;
-                        cavernList.Add(right);
+                        cavernArray2d[y, x].Right = right;
                     }
                     if (bottom != null)
                     {
-                        cavernArray2d[columnIndex, rowIndex].Bottom = bottom;
-                        cavernList.Add(bottom);
+                        cavernArray2d[y, x].Bottom = bottom;
                     }
                     if (left != null)
                     {
-                        cavernArray2d[columnIndex, rowIndex].Left = left;
-                        cavernList.Add(left);
+                        cavernArray2d[y, x].Left = left;
                     }
                     if (top != null)
                     {
-                        cavernArray2d[columnIndex, rowIndex].Top = (top);
-                        cavernList.Add(top);
+                        cavernArray2d[y, x].Top = top;
                     }
                 }
             }
 
-            return new Cavern { Array2d = cavernArray2d, List = cavernList };
+            return cavernArray2d;
         }
-    }
-
-    class Cavern
-    {
-        public Position[,] Array2d { get; set; }
-        public List<Position> List { get; set; }
     }
 
     class Position
@@ -93,6 +110,13 @@ namespace Day15
         public int ColumnIndex { get; set; }
         public int RowIndex { get; set; }
         public int RiskLevel { get; set; }
+        public bool IsEndPosition
+        {
+            get
+            {
+                return Right == null && Bottom == null;
+            }
+        }
         public Position Top { get; set; }
         public Position Right { get; set; }
         public Position Bottom { get; set; }
@@ -109,16 +133,17 @@ namespace Day15
                 return positions.ToArray();
             }
         }
-        public int TotalRisk { private get; set; }
+        public int TotalRisk { get; set; }
         public int CalculateTotalRisk()
         {
             if (TotalRisk != int.MaxValue)
             {
                 return TotalRisk;
             }
-            if (Right == null && Bottom == null)
+            if (IsEndPosition)
             {
                 TotalRisk = RiskLevel;
+                return TotalRisk;
             }
 
             var lowestTotalRisk = int.MaxValue;
@@ -128,36 +153,57 @@ namespace Day15
             {
                 if (connectedPosition.TotalRisk != int.MaxValue)
                 {
-                    CalculateTotalRisk(lowestTotalRisk, 0);
+                    CalculateTotalRisk(new List<Position> { this }, lowestTotalRisk, 0);
                 }
             }
             TotalRisk = RiskLevel + ConnectedPositions.Min(connectedPosition => connectedPosition.TotalRisk);
             return TotalRisk;
         }
 
-        public int CalculateTotalRisk(int budget, int price)
+        public int CalculateTotalRisk(IEnumerable<Position> visitedPositions, int budget, int price)
         {
+            if (price > budget)
+            {
+                return int.MaxValue;
+            }
             if (TotalRisk != int.MaxValue)
             {
                 return TotalRisk;
             }
 
-            return RiskLevel + ConnectedPositions.Min(connectedPosition => connectedPosition.CalculateTotalRisk(budget, price + RiskLevel));
+            var unvisitedNeighbours = ConnectedPositions.Except(visitedPositions);
+
+            if (unvisitedNeighbours.Any())
+            {
+                return
+                RiskLevel +
+                ConnectedPositions
+                    .Except(visitedPositions)
+                    .Min(connectedPosition =>
+                        connectedPosition.CalculateTotalRisk(
+                            visitedPositions.Concat(new List<Position> { this }),
+                            budget,
+                            price + RiskLevel));
+            }
+
+            return int.MaxValue;
         }
     }
 
-    class Helper
+    class Logger
     {
         public static ulong Iterations { get; set; } = 0;
-        public static Cavern Cavern { get; set; }
+        public static Position[,] Cavern { get; set; }
         public static void PrintCavern()
         {
-            for (var column = 0; column < Cavern.Array2d.GetLength(0); column++)
+            Console.WriteLine();
+            Console.WriteLine($"Iteration {++Iterations}");
+            for (var column = 0; column < Cavern.GetLength(0); column++)
             {
-                for (var row = 0; row < Cavern.Array2d.GetLength(1); row++)
+                for (var row = 0; row < Cavern.GetLength(1); row++)
                 {
-                    var position = Cavern.Array2d[column, row];
-                    if (position.CalculateTotalRisk() != int.MaxValue)
+                    var position = Cavern[column, row];
+                    if (position.TotalRisk != int.MaxValue)
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
                     }
